@@ -6,7 +6,7 @@ import { ChatComposer } from '@/components/chat/chat-composer';
 import { ChatHeader } from '@/components/chat/chat-header';
 import { ChatSidebar } from '@/components/chat/chat-sidebar';
 import { MessageList } from '@/components/chat/message-list';
-import { INITIAL_CONVERSATIONS, NEW_CHAT_MESSAGES, type Conversation } from '@/constants/chat';
+import { INITIAL_CONVERSATIONS, NEW_CHAT_MESSAGES, type Conversation, type ImageAttachment } from '@/constants/chat';
 import { streamChatResponse } from '@/services/chat';
 
 export default function ChatScreen() {
@@ -19,7 +19,7 @@ export default function ChatScreen() {
 
   useEffect(() => () => abortController.current?.abort(), []);
 
-  async function handleSend(content: string) {
+  async function handleSend(content: string, image?: ImageAttachment) {
     if (streamingConversationId) {
       if (__DEV__) console.log('[CHAT] send.ignored', { reason: 'response_in_progress' });
       return;
@@ -27,7 +27,7 @@ export default function ChatScreen() {
     const conversationId = activeConversationId;
     const startedAt = Date.now();
     if (__DEV__) console.log('[CHAT] send.started', { conversationId, inputCharacters: content.length });
-    const userMessage = { id: `message-${Date.now()}-user`, role: 'user' as const, content };
+    const userMessage = { id: `message-${Date.now()}-user`, role: 'user' as const, content, image };
     const assistantMessage = { id: `message-${Date.now()}-assistant`, role: 'assistant' as const, content: '' };
     const requestMessages = [...activeConversation.messages, userMessage];
 
@@ -36,8 +36,8 @@ export default function ChatScreen() {
       const isUntitled = conversation.title === 'New conversation';
       return {
         ...conversation,
-        title: isUntitled ? content.slice(0, 32) : conversation.title,
-        preview: content,
+        title: isUntitled ? (content || 'Image').slice(0, 32) : conversation.title,
+        preview: content || 'Image attachment',
         updatedAt: 'Now',
         messages: [...conversation.messages, userMessage, assistantMessage],
       };

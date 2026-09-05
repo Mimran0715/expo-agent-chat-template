@@ -25,6 +25,8 @@ Set `MODEL_PROVIDER` and the matching credentials in `.env`:
 
 All providers are instantiated behind the same LangChain chat-model interface in `agent/model.server.ts`; the API and app streaming code do not change when providers change.
 
+To send camera or photo-library images to a vision-capable model, set `MODEL_SUPPORTS_IMAGES=true`. It defaults to false so image messages receive a clear compatibility notice instead of being sent to a text-only model.
+
 Set `CHAT_DEBUG_LOGGING=true` to print structured LangChain chat lifecycle logs on the server. Logs cover request receipt and parsing, input validation, model creation and connection, prompt preparation, generation start and first token, completion, cancellation, timeout, and sanitized errors.
 
 Chat text remains excluded by default. To include received messages and each generated chunk temporarily, also set `CHAT_DEBUG_LOG_CONTENT=true`. Content logging can expose sensitive user data, so use it only during local debugging and disable it afterward.

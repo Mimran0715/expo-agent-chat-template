@@ -1,4 +1,16 @@
-export type ChatMessage = { id: string; role: 'assistant' | 'user'; content: string };
+export type ImageAttachment = {
+  dataUrl: string;
+  height: number;
+  uri: string;
+  width: number;
+};
+
+export type ChatMessage = {
+  id: string;
+  role: 'assistant' | 'user';
+  content: string;
+  image?: ImageAttachment;
+};
 export type Conversation = {
   id: string;
   title: string;

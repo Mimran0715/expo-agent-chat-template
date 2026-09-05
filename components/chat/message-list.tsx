@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Image } from 'expo-image';
 import { useRef } from 'react';
 import Markdown from 'react-native-markdown-display';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
@@ -14,6 +15,7 @@ export function MessageList({ messages, streaming = false }: { messages: ChatMes
         <View style={[styles.row, item.role === 'user' && styles.userRow]}>
           {item.role === 'assistant' && <View style={styles.avatar}><Ionicons name="sparkles" size={16} color="#FFFFFF" /></View>}
           <View style={[styles.bubble, item.role === 'user' ? styles.userBubble : styles.assistantBubble]}>
+            {item.image && <Image source={{ uri: item.image.uri }} style={styles.image} contentFit="cover" />}
             {item.role === 'assistant' && item.content ? (
               <Markdown style={markdownStyles}>{item.content}</Markdown>
             ) : (
@@ -38,6 +40,7 @@ const styles = StyleSheet.create({
   userBubble: { backgroundColor: '#315C45', borderTopRightRadius: 6 },
   message: { color: '#30342F', fontSize: 16, lineHeight: 23 },
   userMessage: { color: '#FFFFFF' },
+  image: { aspectRatio: 1, borderRadius: 12, marginBottom: 8, width: 220 },
 });
 
 const markdownStyles = StyleSheet.create({

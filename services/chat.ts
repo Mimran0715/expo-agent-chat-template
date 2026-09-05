@@ -51,7 +51,13 @@ export async function streamChatResponse(
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: messages.map(({ role, content }) => ({ role, content })) }),
+      body: JSON.stringify({
+        messages: messages.map(({ role, content, image }) => ({
+          role,
+          content,
+          image: image ? { dataUrl: image.dataUrl } : undefined,
+        })),
+      }),
       signal,
     });
 

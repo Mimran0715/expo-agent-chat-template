@@ -3,7 +3,14 @@ import type { BaseMessageLike } from '@langchain/core/messages';
 import { createChatLogger } from '@/agent/chat-logger.server';
 import { createChatModel } from '@/agent/model.server';
 
-type IncomingMessage = { role: 'assistant' | 'user'; content: string };
+type IncomingMessage = {
+  role: 'assistant' | 'user';
+  content: string;
+  image?: { dataUrl: string };
+};
+
+const IMAGE_UNSUPPORTED_RESPONSE =
+  "This model can't read images. Please switch to an image-capable model or send your question as text.";
 
 const DEFAULT_GENERATION_TIMEOUT_MS = 120_000;
 
@@ -24,9 +31,16 @@ function isIncomingMessage(value: unknown): value is IncomingMessage {
   return (
     (message.role === 'assistant' || message.role === 'user') &&
     typeof message.content === 'string' &&
-    message.content.trim().length > 0 &&
-    message.content.length <= 50_000
+    message.content.length <= 50_000 &&
+    (message.image === undefined || isIncomingImage(message.image)) &&
+    (message.content.trim().length > 0 || isIncomingImage(message.image))
   );
+}
+
+function isIncomingImage(value: unknown): value is { dataUrl: string } {
+  if (!value || typeof value !== 'object') return false;
+  const dataUrl = (value as Record<string, unknown>).dataUrl;
+  return typeof dataUrl === 'string' && /^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(dataUrl) && dataUrl.length <= 15_000_000;
 }
 
 export async function POST(request: Request) {
@@ -64,7 +78,7 @@ export async function POST(request: Request) {
     roles: messages.map(({ role }) => role).join(','),
   });
   logger.content('input.received', {
-    messages: messages.map(({ role, content }) => ({ role, content })),
+    messages: messages.map(({ role, content, image }) => ({ role, content, hasImage: Boolean(image) })),
   });
 
   const encoder = new TextEncoder();
@@ -83,6 +97,13 @@ export async function POST(request: Request) {
       let timeout: ReturnType<typeof setTimeout> | undefined;
 
       try {
+        const supportsImages = process.env.MODEL_SUPPORTS_IMAGES === 'true';
+        if (messages.at(-1)?.image && !supportsImages) {
+          send({ type: 'token', content: IMAGE_UNSUPPORTED_RESPONSE });
+          send({ type: 'done' });
+          logger.debug('model.skipped_image_unsupported');
+          return;
+        }
         const timeoutMs = generationTimeoutMs();
         const timeoutError = new Error(`Generation timed out after ${timeoutMs}ms.`);
         const timeoutPromise = new Promise<never>((_, reject) => {
@@ -109,7 +130,15 @@ export async function POST(request: Request) {
         const systemPrompt = process.env.MODEL_SYSTEM_PROMPT?.trim();
         const modelMessages: BaseMessageLike[] = [
           ...(systemPrompt ? ([{ role: 'system', content: systemPrompt }] as BaseMessageLike[]) : []),
-          ...messages,
+          ...messages.map(({ role, content, image }) => image && supportsImages
+            ? {
+                role,
+                content: [
+                  ...(content.trim() ? [{ type: 'text', text: content }] : []),
+                  { type: 'image_url', image_url: { url: image.dataUrl } },
+                ],
+              }
+            : { role, content: content || '[Image attachment omitted]' }),
         ];
         logger.debug('prompt.prepared', {
           systemPromptConfigured: Boolean(systemPrompt),
