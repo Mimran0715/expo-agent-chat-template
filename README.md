@@ -1,50 +1,34 @@
-# Welcome to your Expo app 👋
+Expo Agent Chat Template is a configurable mobile AI chat starter built with Expo Router and LangChain. Chat responses stream from a server route, keeping model credentials out of the client bundle.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Run with local Ollama
 
-## Get started
-
-1. Install dependencies
+1. Install and start Ollama, then pull the model configured in `.env`:
 
    ```bash
-   npm install
+   ollama pull llama3.2
    ```
 
-2. Start the app
+2. Copy `.env.example` to `.env` if needed and adjust `MODEL_NAME`, `OLLAMA_BASE_URL`, or the shared generation settings.
+3. Start the app with `npm start`. Expo Router serves `/api/chat` during development, and that server route connects to Ollama.
 
-   ```bash
-   npx expo start
-   ```
+On a physical device, Ollama still runs on the development computer: the Expo API route is the bridge, so `OLLAMA_BASE_URL=http://127.0.0.1:11434` remains server-local.
 
-In the output, you'll find options to open the app in a
+## Change model providers
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Set `MODEL_PROVIDER` and the matching credentials in `.env`:
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- `ollama`: local Ollama using `OLLAMA_BASE_URL`
+- `ollama-cloud`: hosted Ollama using `OLLAMA_BASE_URL` and `OLLAMA_API_KEY`
+- `openai`: `OPENAI_API_KEY` and optional `OPENAI_BASE_URL`
+- `anthropic`: `ANTHROPIC_API_KEY` and optional `ANTHROPIC_BASE_URL`
+- `google`: `GOOGLE_API_KEY` and optional `GOOGLE_BASE_URL`
 
-## Get a fresh project
+All providers are instantiated behind the same LangChain chat-model interface in `agent/model.server.ts`; the API and app streaming code do not change when providers change.
 
-When you're ready, run:
+Set `CHAT_DEBUG_LOGGING=true` to print structured LangChain chat lifecycle logs on the server. Logs cover request receipt and parsing, input validation, model creation and connection, prompt preparation, generation start and first token, completion, cancellation, timeout, and sanitized errors.
 
-```bash
-npm run reset-project
-```
+Chat text remains excluded by default. To include received messages and each generated chunk temporarily, also set `CHAT_DEBUG_LOG_CONTENT=true`. Content logging can expose sensitive user data, so use it only during local debugging and disable it afterward.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+`MODEL_REQUEST_TIMEOUT_MS` sets the maximum duration of a model generation and defaults to 120 seconds. When it expires, the server aborts the LangChain stream and returns a timeout error to the chat UI.
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+For a production native build, deploy the Expo Router server and configure its origin, or set `EXPO_PUBLIC_CHAT_API_URL` to the deployed `/api/chat` URL. Never put provider API keys in an `EXPO_PUBLIC_` variable.

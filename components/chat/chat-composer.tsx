@@ -3,16 +3,16 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { IconButton } from './icon-button';
 
-export function ChatComposer({ onSend }: { onSend: (message: string) => void }) {
+export function ChatComposer({ disabled = false, onSend }: { disabled?: boolean; onSend: (message: string) => void }) {
   const [draft, setDraft] = useState('');
-  const canSend = draft.trim().length > 0;
+  const canSend = draft.trim().length > 0 && !disabled;
   function submit() { if (canSend) { onSend(draft.trim()); setDraft(''); } }
 
   return (
     <View style={styles.wrapper}>
       <View style={styles.composer}>
         <IconButton name="add" accessibilityLabel="Add attachment" color="#667067" />
-        <TextInput accessibilityLabel="Message" multiline onChangeText={setDraft} onSubmitEditing={submit}
+        <TextInput accessibilityLabel="Message" editable={!disabled} multiline onChangeText={setDraft} onSubmitEditing={submit}
           placeholder="Message Assistant" placeholderTextColor="#8A918A" returnKeyType="send" style={styles.input} value={draft} />
         <Pressable accessibilityLabel="Send message" disabled={!canSend} onPress={submit}
           style={({ pressed }) => [styles.send, !canSend && styles.sendDisabled, pressed && styles.pressed]}>

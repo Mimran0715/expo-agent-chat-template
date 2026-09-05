@@ -1,15 +1,21 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useRef } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import type { ChatMessage } from '@/constants/chat';
 
-export function MessageList({ messages }: { messages: ChatMessage[] }) {
+export function MessageList({ messages, streaming = false }: { messages: ChatMessage[]; streaming?: boolean }) {
+  const list = useRef<FlatList<ChatMessage>>(null);
+
   return (
-    <FlatList contentContainerStyle={styles.content} data={messages} keyExtractor={(item) => item.id}
+    <FlatList ref={list} contentContainerStyle={styles.content} data={messages} keyExtractor={(item) => item.id}
+      onContentSizeChange={() => list.current?.scrollToEnd({ animated: true })}
       renderItem={({ item }) => (
         <View style={[styles.row, item.role === 'user' && styles.userRow]}>
           {item.role === 'assistant' && <View style={styles.avatar}><Ionicons name="sparkles" size={16} color="#FFFFFF" /></View>}
           <View style={[styles.bubble, item.role === 'user' ? styles.userBubble : styles.assistantBubble]}>
-            <Text style={[styles.message, item.role === 'user' && styles.userMessage]}>{item.content}</Text>
+            <Text style={[styles.message, item.role === 'user' && styles.userMessage]}>
+              {item.content || (streaming && item === messages[messages.length - 1] ? 'Thinking…' : '')}
+            </Text>
           </View>
         </View>
       )}

@@ -1,7 +1,41 @@
-This project is meant to serve as a starter template for building mobile agentic chat applications using Expo and React Native.
+# Objective
 
-This project uses Expo v. 54 for testing via the Expo Go app on IOS / Android.
+## Goal
 
-This project consists of a clean chat UI. This application consists of a main chat interface, where users can draft text messages. The agentic system process text messages and determine what actions to take. This UI will include a chat sidebar, where prior chats can be accessed. This UI will include a user profile that can be accessed in the sidebar, which can lead to settings and profile information.
+Build a reusable Expo-based mobile AI agent template that allows
+developers to rapidly create specialized AI chat applications.
 
-The code is meant to be highly modular and easily adjustable to allow for easy reproducibility for mobile agentic chat projects.
+## Core Principle
+
+The template handles common AI chat infrastructure while the
+developer configures the domain-specific agent.
+
+## Template Responsibilities
+
+- Chat UI
+- Streaming
+- Multimodal input
+- Attachments
+- Tool calling
+- RAG integration
+- Conversation state
+- Citations
+- Model integration
+
+## Developer Responsibilities
+
+- System prompt
+- Knowledge corpus
+- Tools
+- Agent behavior
+- Model configuration
+- Branding
+- Domain-specific functionality
+
+## Example Applications
+
+- Research assistant
+- Religious Q&A assistant
+- Medical literature assistant
+- Coding assistant
+- Personal knowledge assistant
